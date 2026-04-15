@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS article_chunks (
     title TEXT,
     content TEXT,
     topic TEXT,
-    embedding VECTOR(1536),
+    embedding VECTOR(384),
     chunk JSONB,
 
     created_at TIMESTAMP DEFAULT NOW()
