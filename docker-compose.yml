@@ -11,12 +11,59 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_user -d ai_posts"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
   redis:
     image: redis:7
-    container_name: ai_redis
+    container_name: redis
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./services/post-generator
+    container_name: ai_api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://ai_user:ai_password@postgres:5432/ai_posts
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./services/scraper-service
+    container_name: ai_worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://ai_user:ai_password@postgres:5432/ai_posts
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+  redis_data:

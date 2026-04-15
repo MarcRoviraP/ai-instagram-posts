@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS article_chunks (
     content TEXT,
     topic TEXT,
     embedding VECTOR(1536),
+    chunk JSONB,
+
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -16,5 +18,6 @@ CREATE TABLE IF NOT EXISTS generated_posts (
     caption TEXT,
     hashtags TEXT,
     status TEXT,
+    raw_html TEXT,
     created_at TIMESTAMP DEFAULT NOW()
 );
